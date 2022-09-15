@@ -8,13 +8,33 @@ namespace PROYECTO_01
 {
     internal class Sucursal
     {
-        private string codigo { get; set; }
-        private string nombre { get; set; }
+        private string codigo;
+        private string nombre;
 
         public Sucursal(string codigo, string nombre)
         {
             this.codigo = codigo;
             this.nombre = nombre;
+        }
+
+        public string getCodigo()
+        {
+            return codigo;
+        }
+
+        public string getNombre()
+        {
+            return nombre;
+        }
+
+        public void setCodigo(string c)
+        {
+            this.codigo = c;
+        }
+
+        public void setNombre(string n)
+        {
+            this.nombre = n;
         }
 
         public override bool Equals(object? obj)

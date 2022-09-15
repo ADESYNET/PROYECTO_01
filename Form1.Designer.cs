@@ -30,6 +30,13 @@
         {
             this.tabPrincipal = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnProcesar = new System.Windows.Forms.Button();
+            this.btnIzquierdaTodo = new System.Windows.Forms.Button();
+            this.btnIzquierda = new System.Windows.Forms.Button();
+            this.btnDerechaTodo = new System.Windows.Forms.Button();
+            this.btnDerecha = new System.Windows.Forms.Button();
+            this.listSeleccion = new System.Windows.Forms.ListBox();
+            this.listSucursales = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.txtRutaZip = new System.Windows.Forms.TextBox();
@@ -44,7 +51,8 @@
             this.lblContrasena = new System.Windows.Forms.Label();
             this.lblUsuario = new System.Windows.Forms.Label();
             this.lblServidor = new System.Windows.Forms.Label();
-            this.listSucursales = new System.Windows.Forms.ListBox();
+            this.lblRutaDescomprimir = new System.Windows.Forms.Label();
+            this.txtRutaDescomprimir = new System.Windows.Forms.TextBox();
             this.tabPrincipal.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -62,20 +70,96 @@
             this.tabPrincipal.Location = new System.Drawing.Point(12, 12);
             this.tabPrincipal.Name = "tabPrincipal";
             this.tabPrincipal.SelectedIndex = 0;
-            this.tabPrincipal.Size = new System.Drawing.Size(727, 391);
+            this.tabPrincipal.Size = new System.Drawing.Size(475, 367);
             this.tabPrincipal.TabIndex = 0;
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.btnProcesar);
+            this.tabPage1.Controls.Add(this.btnIzquierdaTodo);
+            this.tabPage1.Controls.Add(this.btnIzquierda);
+            this.tabPage1.Controls.Add(this.btnDerechaTodo);
+            this.tabPage1.Controls.Add(this.btnDerecha);
+            this.tabPage1.Controls.Add(this.listSeleccion);
             this.tabPage1.Controls.Add(this.listSucursales);
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Location = new System.Drawing.Point(4, 24);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(719, 363);
+            this.tabPage1.Size = new System.Drawing.Size(467, 339);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Sucursales";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // btnProcesar
+            // 
+            this.btnProcesar.Location = new System.Drawing.Point(330, 226);
+            this.btnProcesar.Name = "btnProcesar";
+            this.btnProcesar.Size = new System.Drawing.Size(75, 43);
+            this.btnProcesar.TabIndex = 7;
+            this.btnProcesar.Text = "Procesar";
+            this.btnProcesar.UseVisualStyleBackColor = true;
+            this.btnProcesar.Click += new System.EventHandler(this.btnProcesar_Click);
+            // 
+            // btnIzquierdaTodo
+            // 
+            this.btnIzquierdaTodo.Location = new System.Drawing.Point(195, 117);
+            this.btnIzquierdaTodo.Name = "btnIzquierdaTodo";
+            this.btnIzquierdaTodo.Size = new System.Drawing.Size(75, 23);
+            this.btnIzquierdaTodo.TabIndex = 6;
+            this.btnIzquierdaTodo.Text = "<<";
+            this.btnIzquierdaTodo.UseVisualStyleBackColor = true;
+            this.btnIzquierdaTodo.Click += new System.EventHandler(this.btnIzquierdaTodo_Click);
+            // 
+            // btnIzquierda
+            // 
+            this.btnIzquierda.Location = new System.Drawing.Point(195, 88);
+            this.btnIzquierda.Name = "btnIzquierda";
+            this.btnIzquierda.Size = new System.Drawing.Size(75, 23);
+            this.btnIzquierda.TabIndex = 5;
+            this.btnIzquierda.Text = "<";
+            this.btnIzquierda.UseVisualStyleBackColor = true;
+            this.btnIzquierda.Click += new System.EventHandler(this.btnIzquierda_Click);
+            // 
+            // btnDerechaTodo
+            // 
+            this.btnDerechaTodo.Location = new System.Drawing.Point(195, 59);
+            this.btnDerechaTodo.Name = "btnDerechaTodo";
+            this.btnDerechaTodo.Size = new System.Drawing.Size(75, 23);
+            this.btnDerechaTodo.TabIndex = 4;
+            this.btnDerechaTodo.Text = ">>";
+            this.btnDerechaTodo.UseVisualStyleBackColor = true;
+            this.btnDerechaTodo.Click += new System.EventHandler(this.btnDerechaTodo_Click);
+            // 
+            // btnDerecha
+            // 
+            this.btnDerecha.Location = new System.Drawing.Point(195, 30);
+            this.btnDerecha.Name = "btnDerecha";
+            this.btnDerecha.Size = new System.Drawing.Size(75, 23);
+            this.btnDerecha.TabIndex = 3;
+            this.btnDerecha.Text = ">";
+            this.btnDerecha.UseVisualStyleBackColor = true;
+            this.btnDerecha.Click += new System.EventHandler(this.btnDerecha_Click);
+            // 
+            // listSeleccion
+            // 
+            this.listSeleccion.FormattingEnabled = true;
+            this.listSeleccion.ItemHeight = 15;
+            this.listSeleccion.Location = new System.Drawing.Point(276, 4);
+            this.listSeleccion.Name = "listSeleccion";
+            this.listSeleccion.Size = new System.Drawing.Size(186, 199);
+            this.listSeleccion.TabIndex = 2;
+            this.listSeleccion.DoubleClick += new System.EventHandler(this.btnIzquierda_Click);
+            // 
+            // listSucursales
+            // 
+            this.listSucursales.FormattingEnabled = true;
+            this.listSucursales.ItemHeight = 15;
+            this.listSucursales.Location = new System.Drawing.Point(3, 4);
+            this.listSucursales.Name = "listSucursales";
+            this.listSucursales.Size = new System.Drawing.Size(186, 199);
+            this.listSucursales.TabIndex = 1;
+            this.listSucursales.DoubleClick += new System.EventHandler(this.btnDerecha_Click);
             // 
             // label1
             // 
@@ -87,12 +171,14 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.txtRutaDescomprimir);
+            this.tabPage2.Controls.Add(this.lblRutaDescomprimir);
             this.tabPage2.Controls.Add(this.txtRutaZip);
             this.tabPage2.Controls.Add(this.lblRutaZip);
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(719, 363);
+            this.tabPage2.Size = new System.Drawing.Size(467, 339);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "ZIP";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -126,14 +212,14 @@
             this.tabPage3.Controls.Add(this.lblServidor);
             this.tabPage3.Location = new System.Drawing.Point(4, 24);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(719, 363);
+            this.tabPage3.Size = new System.Drawing.Size(467, 339);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Conexión";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // btnGuardarDatosConexion
             // 
-            this.btnGuardarDatosConexion.Location = new System.Drawing.Point(406, 18);
+            this.btnGuardarDatosConexion.Location = new System.Drawing.Point(249, 157);
             this.btnGuardarDatosConexion.Name = "btnGuardarDatosConexion";
             this.btnGuardarDatosConexion.Size = new System.Drawing.Size(107, 49);
             this.btnGuardarDatosConexion.TabIndex = 8;
@@ -152,6 +238,7 @@
             // 
             this.txtContrasena.Location = new System.Drawing.Point(126, 87);
             this.txtContrasena.Name = "txtContrasena";
+            this.txtContrasena.PasswordChar = '*';
             this.txtContrasena.Size = new System.Drawing.Size(230, 23);
             this.txtContrasena.TabIndex = 6;
             // 
@@ -206,20 +293,27 @@
             this.lblServidor.Text = "Servidor";
             this.lblServidor.Click += new System.EventHandler(this.label1_Click);
             // 
-            // listSucursales
+            // lblRutaDescomprimir
             // 
-            this.listSucursales.FormattingEnabled = true;
-            this.listSucursales.ItemHeight = 15;
-            this.listSucursales.Location = new System.Drawing.Point(6, 6);
-            this.listSucursales.Name = "listSucursales";
-            this.listSucursales.Size = new System.Drawing.Size(221, 349);
-            this.listSucursales.TabIndex = 1;
+            this.lblRutaDescomprimir.AutoSize = true;
+            this.lblRutaDescomprimir.Location = new System.Drawing.Point(6, 60);
+            this.lblRutaDescomprimir.Name = "lblRutaDescomprimir";
+            this.lblRutaDescomprimir.Size = new System.Drawing.Size(134, 15);
+            this.lblRutaDescomprimir.TabIndex = 2;
+            this.lblRutaDescomprimir.Text = "Ruta para descomprimir";
+            // 
+            // txtRutaDescomprimir
+            // 
+            this.txtRutaDescomprimir.Location = new System.Drawing.Point(140, 57);
+            this.txtRutaDescomprimir.Name = "txtRutaDescomprimir";
+            this.txtRutaDescomprimir.Size = new System.Drawing.Size(307, 23);
+            this.txtRutaDescomprimir.TabIndex = 3;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 415);
+            this.ClientSize = new System.Drawing.Size(499, 391);
             this.Controls.Add(this.tabPrincipal);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -251,8 +345,16 @@
         private Label lblContrasena;
         private Label lblUsuario;
         private Label label1;
+        private ListBox listSucursales;
+        private Button btnIzquierdaTodo;
+        private Button btnIzquierda;
+        private Button btnDerechaTodo;
+        private Button btnDerecha;
+        private ListBox listSeleccion;
         private TextBox txtRutaZip;
         private Label lblRutaZip;
-        private ListBox listSucursales;
+        private Button btnProcesar;
+        private TextBox txtRutaDescomprimir;
+        private Label lblRutaDescomprimir;
     }
 }
