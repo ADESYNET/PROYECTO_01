@@ -39,6 +39,9 @@
             this.listSucursales = new System.Windows.Forms.ListBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.btnRutasZip = new System.Windows.Forms.Button();
+            this.txtRutaDescomprimir = new System.Windows.Forms.TextBox();
+            this.lblRutaDescomprimir = new System.Windows.Forms.Label();
             this.txtRutaZip = new System.Windows.Forms.TextBox();
             this.lblRutaZip = new System.Windows.Forms.Label();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -51,8 +54,6 @@
             this.lblContrasena = new System.Windows.Forms.Label();
             this.lblUsuario = new System.Windows.Forms.Label();
             this.lblServidor = new System.Windows.Forms.Label();
-            this.lblRutaDescomprimir = new System.Windows.Forms.Label();
-            this.txtRutaDescomprimir = new System.Windows.Forms.TextBox();
             this.tabPrincipal.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -67,10 +68,10 @@
             this.tabPrincipal.Controls.Add(this.tabPage1);
             this.tabPrincipal.Controls.Add(this.tabPage2);
             this.tabPrincipal.Controls.Add(this.tabPage3);
-            this.tabPrincipal.Location = new System.Drawing.Point(12, 12);
+            this.tabPrincipal.Location = new System.Drawing.Point(12, 67);
             this.tabPrincipal.Name = "tabPrincipal";
             this.tabPrincipal.SelectedIndex = 0;
-            this.tabPrincipal.Size = new System.Drawing.Size(475, 367);
+            this.tabPrincipal.Size = new System.Drawing.Size(481, 315);
             this.tabPrincipal.TabIndex = 0;
             // 
             // tabPage1
@@ -86,7 +87,7 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 24);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(467, 339);
+            this.tabPage1.Size = new System.Drawing.Size(473, 287);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Sucursales";
             this.tabPage1.UseVisualStyleBackColor = true;
@@ -171,6 +172,7 @@
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.btnRutasZip);
             this.tabPage2.Controls.Add(this.txtRutaDescomprimir);
             this.tabPage2.Controls.Add(this.lblRutaDescomprimir);
             this.tabPage2.Controls.Add(this.txtRutaZip);
@@ -178,10 +180,36 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(467, 339);
+            this.tabPage2.Size = new System.Drawing.Size(554, 364);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "ZIP";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // btnRutasZip
+            // 
+            this.btnRutasZip.Location = new System.Drawing.Point(372, 111);
+            this.btnRutasZip.Name = "btnRutasZip";
+            this.btnRutasZip.Size = new System.Drawing.Size(75, 44);
+            this.btnRutasZip.TabIndex = 4;
+            this.btnRutasZip.Text = "Guardar rutas";
+            this.btnRutasZip.UseVisualStyleBackColor = true;
+            this.btnRutasZip.Click += new System.EventHandler(this.btnRutasZip_Click);
+            // 
+            // txtRutaDescomprimir
+            // 
+            this.txtRutaDescomprimir.Location = new System.Drawing.Point(140, 57);
+            this.txtRutaDescomprimir.Name = "txtRutaDescomprimir";
+            this.txtRutaDescomprimir.Size = new System.Drawing.Size(307, 23);
+            this.txtRutaDescomprimir.TabIndex = 3;
+            // 
+            // lblRutaDescomprimir
+            // 
+            this.lblRutaDescomprimir.AutoSize = true;
+            this.lblRutaDescomprimir.Location = new System.Drawing.Point(6, 60);
+            this.lblRutaDescomprimir.Name = "lblRutaDescomprimir";
+            this.lblRutaDescomprimir.Size = new System.Drawing.Size(134, 15);
+            this.lblRutaDescomprimir.TabIndex = 2;
+            this.lblRutaDescomprimir.Text = "Ruta para descomprimir";
             // 
             // txtRutaZip
             // 
@@ -212,7 +240,7 @@
             this.tabPage3.Controls.Add(this.lblServidor);
             this.tabPage3.Location = new System.Drawing.Point(4, 24);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(467, 339);
+            this.tabPage3.Size = new System.Drawing.Size(554, 364);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Conexión";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -293,30 +321,14 @@
             this.lblServidor.Text = "Servidor";
             this.lblServidor.Click += new System.EventHandler(this.label1_Click);
             // 
-            // lblRutaDescomprimir
-            // 
-            this.lblRutaDescomprimir.AutoSize = true;
-            this.lblRutaDescomprimir.Location = new System.Drawing.Point(6, 60);
-            this.lblRutaDescomprimir.Name = "lblRutaDescomprimir";
-            this.lblRutaDescomprimir.Size = new System.Drawing.Size(134, 15);
-            this.lblRutaDescomprimir.TabIndex = 2;
-            this.lblRutaDescomprimir.Text = "Ruta para descomprimir";
-            // 
-            // txtRutaDescomprimir
-            // 
-            this.txtRutaDescomprimir.Location = new System.Drawing.Point(140, 57);
-            this.txtRutaDescomprimir.Name = "txtRutaDescomprimir";
-            this.txtRutaDescomprimir.Size = new System.Drawing.Size(307, 23);
-            this.txtRutaDescomprimir.TabIndex = 3;
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(499, 391);
+            this.ClientSize = new System.Drawing.Size(505, 394);
             this.Controls.Add(this.tabPrincipal);
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "Recepción Información de Sucursales";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.tabPrincipal.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
@@ -356,5 +368,6 @@
         private Button btnProcesar;
         private TextBox txtRutaDescomprimir;
         private Label lblRutaDescomprimir;
+        private Button btnRutasZip;
     }
 }

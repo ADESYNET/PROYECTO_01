@@ -1,3 +1,5 @@
+using MaterialSkin;
+using MaterialSkin.Controls;
 using Microsoft.SqlServer.Management.Sdk.Sfc;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
@@ -5,16 +7,22 @@ using System.CodeDom.Compiler;
 using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Xml;
 
 namespace PROYECTO_01
 {
-    public partial class Form1 : Form
+    public partial class Form1 : MaterialForm
     {
         public Form1()
         {
             InitializeComponent();
+
+            var materialSkinManager = MaterialSkinManager.Instance;
+            materialSkinManager.AddFormToManage(this);
+            materialSkinManager.Theme = MaterialSkinManager.Themes.DARK;
+            materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey100, Primary.BlueGrey100, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -61,7 +69,7 @@ namespace PROYECTO_01
         {
             SqlConnection cnx = null;
 
-            //Recuperar los datos de conexión a la base de datos en caso ya exista una.
+            //Recuperar los datos de conexión base de datos en caso ya exista una.
             if (File.Exists("DatosConexion.json"))
             {
                 string DatosConexion        = File.ReadAllText("DatosConexion.json");
@@ -75,6 +83,7 @@ namespace PROYECTO_01
                 cnx = AbrirConexion(this.txtUsuario.Text, this.txtContrasena.Text, this.txtBaseDatos.Text, this.txtServidor.Text);
 
                 this.txtRutaZip.Text = getRutaZip(cnx);
+                this.txtRutaDescomprimir.Text = getRutaDescomprimir();
 
                //Cargar sucursales
                 List<Sucursal> mislocales  = getSucursales(cnx);
@@ -110,15 +119,37 @@ namespace PROYECTO_01
             if (respuesta.Read())
             {
                 string ruta = (string)respuesta.GetSqlString(0);
+                ruta = ruta.Trim();
+
                 respuesta.Close();
                 return ruta;
             }
             else
             {
                 respuesta.Close();
-                return "";
+
+                //Si no la encuentras en la base de datos tomar en cuenta que puede estar en el archivo.
+                if (!File.Exists("EntornoZIP.json"))
+                    return "";
+
+                string EntornoZip = File.ReadAllText("EntornoZIP.json");
+                dynamic jsonEntornoZIP = JsonConvert.DeserializeObject(EntornoZip);
+
+                return jsonEntornoZIP.RutaZip;
+
             }
             
+        }
+
+        static string getRutaDescomprimir()
+        {
+            if (!File.Exists("EntornoZIP.json"))
+                return "";
+
+            string EntornoZip = File.ReadAllText("EntornoZIP.json");
+            dynamic jsonEntornoZIP = JsonConvert.DeserializeObject(EntornoZip);
+
+            return jsonEntornoZIP.RutaDescomprimir;
         }
 
         static List<Sucursal> getSucursales(SqlConnection c)
@@ -187,37 +218,75 @@ namespace PROYECTO_01
             foreach (var item in this.listSeleccion.Items)
             {
                 //Ejecutar la recepción de la información
-                ThreadPool.QueueUserWorkItem(RecuperarInformacionAsync,);
+                //ThreadPool.QueueUserWorkItem(RecuperarInformacionAsync,);
                 
             }
 
         }
 
-        static void RecuperarInformacion(string pRutaXML, SqlConnection cnx, string nombreSP, string pCdlocal, string pRutaZip )
+        static bool zip_ya_fue_procesado(string pCdlocal,SqlConnection c,string pZipProcesar)
         {
-            //Crear la carpeta para descomprimir el zip del local
-            if (pRutaXML.Substring(pRutaXML.Length - 1, 1) == "\\")
+            SqlCommand qry = new SqlCommand($"select max(archivo) as archivo from datalocales where cdlocalOrigen='{pCdlocal}'", c);
+            SqlDataReader respuesta = qry.ExecuteReader();
+
+            if (respuesta.Read())
             {
-                Directory.CreateDirectory($"{pRutaXML}{pCdlocal}");
+                string ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                ultimoArchivoCargado = ultimoArchivoCargado.Trim();
+
+                respuesta.Close();
+
+                if (ultimoArchivoCargado.ToUpper().Equals(pZipProcesar.Trim().ToUpper()))
+                    return true;
+
+                
+                return false;
             }
             else
             {
-                Directory.CreateDirectory($"{pRutaXML}\\{pCdlocal}");
+                respuesta.Close();
+                return false;
+            }
+        }
+
+        static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string nombreSP, string pCdlocal, string pRutaZip )
+        {
+            /*Procesar el archivo que nos ha enviado la sucursal.
+             *Buscarlo en la carpeta de zips
+             */
+            string ZipRecepcionado = (string)pRutaZip
+            
+            
+            if (zip_ya_fue_procesado(pCdlocal, cnx, pRutaZip, nombreArchivo))
+            {
+                MessageBox.Show("");
+            }
+
+                return;
+
+            //Crear la carpeta para descomprimir el zip del local
+            if (pRutaDescoprimir.Substring(pRutaDescoprimir.Length - 1, 1) == "\\")
+            {
+                Directory.CreateDirectory($"{pRutaDescoprimir}{pCdlocal}");
+            }
+            else
+            {
+                Directory.CreateDirectory($"{pRutaDescoprimir}\\{pCdlocal}");
             }
 
             //descomprimir el zip
             try
             {
-                ZipFile.ExtractToDirectory(pRutadelZIP, pRutaDondeSeVaDescomprimir);
-                Console.WriteLine("Descompresión exitosa..");
+                //ZipFile.ExtractToDirectory(pRutadelZIP, pRutaDondeSeVaDescomprimir);
+                //Console.WriteLine("Descompresión exitosa..");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                //Console.WriteLine(ex.Message);
             }
 
 
-            SqlXml miXML = new SqlXml(new XmlTextReader(pRutaXML));
+            SqlXml miXML = new SqlXml(new XmlTextReader(pRutaDescoprimir));
 
             string qry = $"exec {nombreSP} @xmlParameter";
 
@@ -237,6 +306,37 @@ namespace PROYECTO_01
 
             
         }
+
+        private void btnRutasZip_Click(object sender, EventArgs e)
+        {
+            //capturar datos
+            string RutaZip, RutaDescomprimir;
+
+            RutaZip = txtRutaZip.Text;
+            RutaDescomprimir = txtRutaDescomprimir.Text;
+            
+            //Convertir los datos en un Json
+            var EntornoZIP = new
+            {
+                RutaZip = RutaZip,
+                RutaDescomprimir = RutaDescomprimir
+            };
+
+            var miJson = JsonConvert.SerializeObject(EntornoZIP);
+
+            try
+            {
+                //Guardar el Json en un archivo
+                File.WriteAllText("EntornoZIP.json", miJson);
+                MessageBox.Show("Se guardaron los datos de zipeado..");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        
 
         /*******POOL DE HILOS - EJEMPLO
         ProbandoPoolHilos ProbandoPoolHilosObject = new ProbandoPoolHilos();
