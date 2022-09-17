@@ -9,7 +9,9 @@ using System.Data.SqlTypes;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
+using System.Windows.Forms;
 using System.Xml;
+using System.Linq;
 
 namespace PROYECTO_01
 {
@@ -21,7 +23,7 @@ namespace PROYECTO_01
 
             var materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
-            materialSkinManager.Theme = MaterialSkinManager.Themes.DARK;
+            materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
             materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey100, Primary.BlueGrey100, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
         }
 
@@ -224,46 +226,72 @@ namespace PROYECTO_01
 
         }
 
-        static bool zip_ya_fue_procesado(string pCdlocal,SqlConnection c,string pZipProcesar)
+        static bool zip_ya_fue_procesado(string UltimoArchivoProcesado,string ZipProcesar)
+        {
+            return UltimoArchivoProcesado.ToUpper().Equals(ZipProcesar.Trim().ToUpper());
+            
+        }
+
+        static string getUltimoArchivoProcesado(string pCdlocal, SqlConnection c)
         {
             SqlCommand qry = new SqlCommand($"select max(archivo) as archivo from datalocales where cdlocalOrigen='{pCdlocal}'", c);
             SqlDataReader respuesta = qry.ExecuteReader();
+            string ultimoArchivoCargado = "";
 
             if (respuesta.Read())
             {
-                string ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
                 ultimoArchivoCargado = ultimoArchivoCargado.Trim();
 
                 respuesta.Close();
-
-                if (ultimoArchivoCargado.ToUpper().Equals(pZipProcesar.Trim().ToUpper()))
-                    return true;
-
-                
-                return false;
             }
-            else
+
+            return ultimoArchivoCargado;
+        }
+
+        static FileInfo[] getArchivosRecepcionados(string pCdlocal,string pRutaZIP, string UltimoArchivoProcesado)
+        {
+            //accediento a la carpeta con los zip
+            DirectoryInfo Metadata_de_la_carpeta = new DirectoryInfo(pRutaZIP);
+            FileInfo[] misArchivos = null;
+            
+            //recorremos los archivos ordenados por fecha de creación
+            foreach (FileInfo Archivo in Metadata_de_la_carpeta.GetFiles().OrderBy(p => p.CreationTime))
             {
-                respuesta.Close();
-                return false;
+                //Si el archivo corresponde a la sucursal y aún no ha sido Procesado, se agrega al arreglo de archivos recepcionados
+                if (Archivo.Name.ToUpper().Contains($"ENVIO_{pCdlocal}") && 
+                    !zip_ya_fue_procesado(UltimoArchivoProcesado.ToUpper(), Archivo.Name.ToUpper())) 
+                {
+                    misArchivos.Append(Archivo);
+
+                    //Este break es para evitar que siga buscando archivos si ya llegó al último procesado..
+                    if (zip_ya_fue_procesado(UltimoArchivoProcesado.ToUpper(), Archivo.Name.ToUpper()))
+                        break;
+                }
             }
+
+            return misArchivos;
         }
 
         static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string nombreSP, string pCdlocal, string pRutaZip )
         {
             /*Procesar el archivo que nos ha enviado la sucursal.
-             *Buscarlo en la carpeta de zips
+             *Buscar todos los zip que ha enviado ese local (pueden ser varios).
+             *
              */
-            string ZipRecepcionado = (string)pRutaZip
-            
-            
-            if (zip_ya_fue_procesado(pCdlocal, cnx, pRutaZip, nombreArchivo))
-            {
-                MessageBox.Show("");
-            }
+            string UltimoProcesado      = getUltimoArchivoProcesado(pCdlocal, cnx);
+            FileInfo[] misArchivosZip   = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
 
+            if (misArchivosZip == null) //No hay archivos -> terminamos el proceso
                 return;
+            
+            foreach (FileInfo Zip in misArchivosZip)
+            {
+                //crear una carpeta para descompimirlo
+                //si la carpeta existe... se elimina sin asco
 
+
+            }
             //Crear la carpeta para descomprimir el zip del local
             if (pRutaDescoprimir.Substring(pRutaDescoprimir.Length - 1, 1) == "\\")
             {
