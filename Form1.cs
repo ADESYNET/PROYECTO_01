@@ -74,7 +74,7 @@ namespace PROYECTO_01
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            SqlConnection cnx = null;
+            SqlConnection cnx = new SqlConnection();
 
             //Recuperar los datos de conexión base de datos en caso ya exista una.
             if (File.Exists("DatosConexion.json"))
@@ -109,8 +109,7 @@ namespace PROYECTO_01
         public  SqlConnection AbrirConexion(string pUser, string pContrasena, string pBaseDatos, string pServidor)
         {
             string CadenaConexion = $"Persist Security Info=False;User ID={pUser};Password={pContrasena};Initial Catalog={pBaseDatos};Server={pServidor}";
-            SqlConnection conexion = null;
-            conexion = new SqlConnection(CadenaConexion);
+            SqlConnection conexion = new SqlConnection(CadenaConexion);
 
             conexion.Open();
 
@@ -222,6 +221,8 @@ namespace PROYECTO_01
             if (this.listSeleccion.Items.Count == 0)
                 return;
 
+            Console.WriteLine("hola mundus");
+
             foreach (var item in this.listSeleccion.Items)
             {
                 //Ejecutar la recepción de la información
@@ -305,7 +306,7 @@ namespace PROYECTO_01
                 try
                 {
                     if (Directory.Exists(miCarpeta))
-                        Directory.Delete(miCarpeta);
+                        Directory.Delete(miCarpeta,true);
                 }
                 catch (Exception ex)
                 {
@@ -332,7 +333,7 @@ namespace PROYECTO_01
 
                 //con el zip descomprimido.. ahora tenemos todos los xml desparramados listos parar procesarlos en sql.
 
-
+                
             }
 
 
@@ -356,6 +357,7 @@ namespace PROYECTO_01
 
             
         }
+
 
         private void btnRutasZip_Click(object sender, EventArgs e)
         {
