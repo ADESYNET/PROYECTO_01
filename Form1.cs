@@ -24,7 +24,12 @@ namespace PROYECTO_01
             var materialSkinManager = MaterialSkinManager.Instance;
             materialSkinManager.AddFormToManage(this);
             materialSkinManager.Theme = MaterialSkinManager.Themes.LIGHT;
-            materialSkinManager.ColorScheme = new ColorScheme(Primary.BlueGrey100, Primary.BlueGrey100, Primary.BlueGrey500, Accent.LightBlue200, TextShade.WHITE);
+            materialSkinManager.ColorScheme = new ColorScheme(getColor(44, 77, 121), getColor(44, 77, 121), Primary.BlueGrey800, Accent.LightBlue700, TextShade.WHITE);
+        }
+
+        private static MaterialSkin.Primary getColor(int R, int G, int B)
+        {
+            return (MaterialSkin.Primary)(R * 65536 + G * 256 + B);
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -273,6 +278,11 @@ namespace PROYECTO_01
             return misArchivos;
         }
 
+        private static bool ruta_termina_en_back_slash(string path)
+        {
+            return (path.Substring(path.Length - 1, 1) == "\\");
+        }
+
         static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string nombreSP, string pCdlocal, string pRutaZip )
         {
             /*Procesar el archivo que nos ha enviado la sucursal.
@@ -284,33 +294,45 @@ namespace PROYECTO_01
 
             if (misArchivosZip == null) //No hay archivos -> terminamos el proceso
                 return;
-            
+
+            //por cada zip
             foreach (FileInfo Zip in misArchivosZip)
             {
                 //crear una carpeta para descompimirlo
                 //si la carpeta existe... se elimina sin asco
+                string miCarpeta = ruta_termina_en_back_slash(pRutaDescoprimir) ? $"{pRutaDescoprimir}{pCdlocal}" : $"{pRutaDescoprimir}\\{pCdlocal}";
+
+                try
+                {
+                    if (Directory.Exists(miCarpeta))
+                        Directory.Delete(miCarpeta);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+
+                //se vuelve a crear..
+                Directory.CreateDirectory(miCarpeta);
+
+                //descomprimir el zip
+                try
+                {
+                    string miZip = ruta_termina_en_back_slash(pRutaZip) ? $"{pRutaZip}{Zip}" : $"{pRutaZip}\\{Zip}";
+
+                    ZipFile.ExtractToDirectory(miZip, miCarpeta);
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    return;
+                }
+
+                //con el zip descomprimido.. ahora tenemos todos los xml desparramados listos parar procesarlos en sql.
 
 
-            }
-            //Crear la carpeta para descomprimir el zip del local
-            if (pRutaDescoprimir.Substring(pRutaDescoprimir.Length - 1, 1) == "\\")
-            {
-                Directory.CreateDirectory($"{pRutaDescoprimir}{pCdlocal}");
-            }
-            else
-            {
-                Directory.CreateDirectory($"{pRutaDescoprimir}\\{pCdlocal}");
-            }
-
-            //descomprimir el zip
-            try
-            {
-                //ZipFile.ExtractToDirectory(pRutadelZIP, pRutaDondeSeVaDescomprimir);
-                //Console.WriteLine("Descompresión exitosa..");
-            }
-            catch (Exception ex)
-            {
-                //Console.WriteLine(ex.Message);
             }
 
 
