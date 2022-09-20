@@ -259,7 +259,7 @@ namespace PROYECTO_01
         {
             //accediento a la carpeta con los zip
             DirectoryInfo Metadata_de_la_carpeta = new DirectoryInfo(pRutaZIP);
-            FileInfo[] misArchivos = null;
+            FileInfo[] misArchivos = Array.Empty<FileInfo>();
             
             //recorremos los archivos ordenados por fecha de creación
             foreach (FileInfo Archivo in Metadata_de_la_carpeta.GetFiles().OrderBy(p => p.CreationTime))
@@ -292,7 +292,8 @@ namespace PROYECTO_01
              */
             string UltimoProcesado      = getUltimoArchivoProcesado(pCdlocal, cnx);
             FileInfo[] misArchivosZip   = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
-
+            FileInfo[] misArchivosXML = Array.Empty<FileInfo>();
+ 
             if (misArchivosZip == null) //No hay archivos -> terminamos el proceso
                 return;
 
@@ -320,9 +321,9 @@ namespace PROYECTO_01
                 //descomprimir el zip
                 try
                 {
-                    string miZip = ruta_termina_en_back_slash(pRutaZip) ? $"{pRutaZip}{Zip}" : $"{pRutaZip}\\{Zip}";
-
-                    ZipFile.ExtractToDirectory(miZip, miCarpeta);
+                    //string miZip = ruta_termina_en_back_slash(pRutaZip) ? $"{pRutaZip}{Zip}" : $"{pRutaZip}\\{Zip}";
+                    //ZipFile.ExtractToDirectory(miZip, miCarpeta);
+                    ZipFile.ExtractToDirectory(Zip.FullName, miCarpeta);
 
                 }
                 catch (Exception ex)
@@ -331,13 +332,15 @@ namespace PROYECTO_01
                     return;
                 }
 
-                //con el zip descomprimido.. ahora tenemos todos los xml desparramados listos parar procesarlos en sql.
+                //con el zip descomprimido.. ahora tenemos todos los xml desparramados (en miCarpeta) listos parar procesarlos en sql.
 
-                
+                foreach(FileInfo xml in misArchivosXML)
+                {
+                    //SqlXml miXML = new SqlXml(new XmlTextReader(ruta_termina_en_back_slash(miCarpeta) ? $"{miCarpeta}{xml}" : $"{miCarpeta}\\{xml}"));
+                    SqlXml miXML = new SqlXml(new XmlTextReader(xml.FullName));
+
+                }
             }
-
-
-            SqlXml miXML = new SqlXml(new XmlTextReader(pRutaDescoprimir));
 
             string qry = $"exec {nombreSP} @xmlParameter";
 
@@ -355,6 +358,19 @@ namespace PROYECTO_01
                 Console.WriteLine(ex.Message);
             }
 
+            
+        }
+
+        private static void procesar_xml(string nombreXML,string SP)
+        {
+            switch (nombreXML)
+            {
+                case "":
+                    //any action
+                    break;
+
+                default;
+            }
             
         }
 
