@@ -12,6 +12,7 @@ using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using System.Xml;
 using System.Linq;
+using System.Data;
 
 namespace PROYECTO_01
 {
@@ -338,40 +339,84 @@ namespace PROYECTO_01
                 {
                     //SqlXml miXML = new SqlXml(new XmlTextReader(ruta_termina_en_back_slash(miCarpeta) ? $"{miCarpeta}{xml}" : $"{miCarpeta}\\{xml}"));
                     SqlXml miXML = new SqlXml(new XmlTextReader(xml.FullName));
+                    bool flgOK = false;
+
+                    switch (xml.Name.ToUpper())
+                    {
+                        case "CLIENTE":
+                            flgOK = procesar_xml("AltaCliente_XML", miXML, cnx);
+                            break;
+
+                        case "CLIENTE_ESTADO":
+                            flgOK = procesar_xml("AltaCliente_Estado_XML", miXML, cnx);
+                            break;
+
+                        case "CREDCLIENTE_BORR":
+                            flgOK = procesar_xml("AltaCredCliente_BorrdelDia_XML", miXML, cnx);
+                            break;
+
+                        case "CREDCLIENTE":
+                            flgOK = procesar_xml("AltaCredCliente_XML", miXML, cnx);
+                            break;
+
+
+
+                        default:
+                            flgOK = false;
+                            break;
+                    }
+                    /*CREDCLIENTE*/
+
+                    if (flgOK)
+                    {
+                        MessageBox.Show("ok");
+                    }
+                    else
+                    {
+                        MessageBox.Show("error");
+                        break; //Sale del foreach
+                    }
 
                 }
             }
+        }
 
-            string qry = $"exec {nombreSP} @xmlParameter";
+        private static bool procesar_xml(string SP, SqlXml miXML, SqlConnection cnx)
+        {
+            string qry = $"exec {SP} @xmlParameter";
 
             SqlCommand consulta = new SqlCommand(qry, cnx);
-            
+
             consulta.Parameters.AddWithValue("@xmlParameter", miXML);
+            consulta.Parameters.Add("Mensaje", SqlDbType.VarChar, 300).Direction = ParameterDirection.Output;
+            consulta.Parameters.Add("SwError", SqlDbType.Bit, 1).Direction = ParameterDirection.Output;
+
+            bool isOK = false;
 
             try
             {
                 consulta.ExecuteNonQuery();
-                Console.WriteLine("Proceso terminado");
+                foreach(SqlParameter parametro in consulta.Parameters)
+                {
+                    if(parametro.Direction == ParameterDirection.Output 
+                        && parametro.ParameterName.Equals("SwError")
+                        && parametro.Value.ToString().Equals("0"))
+                    {
+                        isOK = true;
+                        break;
+                    }
+                        
+                }
+
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                MessageBox.Show(ex.Message);
+                return false;
             }
 
-            
-        }
+            return isOK;
 
-        private static void procesar_xml(string nombreXML,string SP)
-        {
-            switch (nombreXML)
-            {
-                case "":
-                    //any action
-                    break;
-
-                default;
-            }
-            
         }
 
 
@@ -427,5 +472,5 @@ namespace PROYECTO_01
             ProbandoPoolHilosObject.EjecutarProceso(nTarea);
         }
         *************/
-    }
-}
+                }
+            }
