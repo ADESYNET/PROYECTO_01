@@ -222,20 +222,18 @@ namespace PROYECTO_01
             if (this.listSeleccion.Items.Count == 0)
                 return;
 
-            Console.WriteLine("hola mundus");
-
             foreach (var item in this.listSeleccion.Items)
             {
                 //Ejecutar la recepción de la información
                 //ThreadPool.QueueUserWorkItem(RecuperarInformacionAsync,);
-                
+                RecuperarInformacion()
             }
 
         }
 
         static bool zip_ya_fue_procesado(string UltimoArchivoProcesado,string ZipProcesar)
         {
-            return UltimoArchivoProcesado.ToUpper().Equals(ZipProcesar.Trim().ToUpper());
+            return UltimoArchivoProcesado.Trim().ToUpper().Equals(ZipProcesar.Trim().ToUpper());
             
         }
 
@@ -334,7 +332,7 @@ namespace PROYECTO_01
                 }
 
                 //con el zip descomprimido.. ahora tenemos todos los xml desparramados (en miCarpeta) listos parar procesarlos en sql.
-
+                /*
                 foreach(FileInfo xml in misArchivosXML)
                 {
                     //SqlXml miXML = new SqlXml(new XmlTextReader(ruta_termina_en_back_slash(miCarpeta) ? $"{miCarpeta}{xml}" : $"{miCarpeta}\\{xml}"));
@@ -359,13 +357,25 @@ namespace PROYECTO_01
                             flgOK = procesar_xml("AltaCredCliente_XML", miXML, cnx);
                             break;
 
+                        case "TERMINAL":
+                            flgOK = procesar_xml("AltaTerminal_XML", miXML, cnx);
+                            break;
 
+                        case "BANCO_CAJA":
+                            flgOK = procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
+                            break;
+
+                        //case "INGRESO":
+                        //    flgOK = procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
+                        //    break;
+
+                        
 
                         default:
                             flgOK = false;
                             break;
                     }
-                    /*CREDCLIENTE*/
+                    
 
                     if (flgOK)
                     {
@@ -377,7 +387,7 @@ namespace PROYECTO_01
                         break; //Sale del foreach
                     }
 
-                }
+                }*/
             }
         }
 
