@@ -18,6 +18,8 @@ namespace PROYECTO_01
 {
     public partial class Form1 : MaterialForm
     {
+        SqlConnection cnx = new SqlConnection();
+
         public Form1()
         {
             InitializeComponent();
@@ -43,18 +45,18 @@ namespace PROYECTO_01
             //capturar datos
             string servidor, usuario, contrasena, bbdd;
 
-            servidor    = txtServidor.Text;
-            usuario     = txtUsuario.Text;
-            contrasena  = txtContrasena.Text;
-            bbdd        = txtBaseDatos.Text;
+            servidor = txtServidor.Text;
+            usuario = txtUsuario.Text;
+            contrasena = txtContrasena.Text;
+            bbdd = txtBaseDatos.Text;
 
             //Convertir los datos en un Json
             var DatosConexion = new
             {
-                Servidor    = servidor,
-                Usuario     = usuario,
-                Contrasena  = contrasena,
-                BaseDatos   = bbdd
+                Servidor = servidor,
+                Usuario = usuario,
+                Contrasena = contrasena,
+                BaseDatos = bbdd
             };
 
             var miJson = JsonConvert.SerializeObject(DatosConexion);
@@ -69,54 +71,66 @@ namespace PROYECTO_01
             {
                 MessageBox.Show(ex.Message);
             }
-            
+
 
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            SqlConnection cnx = new SqlConnection();
 
             //Recuperar los datos de conexión base de datos en caso ya exista una.
             if (File.Exists("DatosConexion.json"))
             {
-                string DatosConexion        = File.ReadAllText("DatosConexion.json");
-                dynamic jsonDatosConexion   = JsonConvert.DeserializeObject(DatosConexion);
+                string DatosConexion = File.ReadAllText("DatosConexion.json");
+                dynamic jsonDatosConexion = JsonConvert.DeserializeObject(DatosConexion);
 
-                this.txtBaseDatos.Text  = jsonDatosConexion.BaseDatos;
+                this.txtBaseDatos.Text = jsonDatosConexion.BaseDatos;
                 this.txtContrasena.Text = jsonDatosConexion.Contrasena;
-                this.txtServidor.Text   = jsonDatosConexion.Servidor;
-                this.txtUsuario.Text    = jsonDatosConexion.Usuario;
+                this.txtServidor.Text = jsonDatosConexion.Servidor;
+                this.txtUsuario.Text = jsonDatosConexion.Usuario;
 
                 cnx = AbrirConexion(this.txtUsuario.Text, this.txtContrasena.Text, this.txtBaseDatos.Text, this.txtServidor.Text);
+                if (cnx.State == 0)
+                {
+                    return;
+                }
 
                 this.txtRutaZip.Text = getRutaZip(cnx);
                 this.txtRutaDescomprimir.Text = getRutaDescomprimir();
 
-               //Cargar sucursales
-                List<Sucursal> mislocales  = getSucursales(cnx);
-                foreach(Sucursal sucursal in mislocales)
+                //Cargar sucursales
+                List<Sucursal> mislocales = getSucursales(cnx);
+                foreach (Sucursal sucursal in mislocales)
                 {
                     this.listSucursales.Items.Add(sucursal.getNombre());
                 }
 
                 //limipiar lista sucursales de selecionados
                 this.listSeleccion.Items.Clear();
-                
+
 
             }
         }
 
-        public  SqlConnection AbrirConexion(string pUser, string pContrasena, string pBaseDatos, string pServidor)
+        public SqlConnection AbrirConexion(string pUser, string pContrasena, string pBaseDatos, string pServidor)
         {
             string CadenaConexion = $"Persist Security Info=False;User ID={pUser};Password={pContrasena};Initial Catalog={pBaseDatos};Server={pServidor}";
             SqlConnection conexion = new SqlConnection(CadenaConexion);
 
-            conexion.Open();
-
-            return conexion;
-
+            try
+            {
+                conexion.Open();
+                return conexion;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+                return conexion;
+            }
         }
+
+
+
 
         static string getRutaZip(SqlConnection c)
         {
@@ -145,7 +159,7 @@ namespace PROYECTO_01
                 return jsonEntornoZIP.RutaZip;
 
             }
-            
+
         }
 
         static string getRutaDescomprimir()
@@ -225,16 +239,24 @@ namespace PROYECTO_01
             foreach (var item in this.listSeleccion.Items)
             {
                 //Ejecutar la recepción de la información
-                //ThreadPool.QueueUserWorkItem(RecuperarInformacionAsync,);
-                RecuperarInformacion()
+                Comodin comodin = new Comodin(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0, 5), txtRutaZip.Text);
+                ThreadPool.QueueUserWorkItem(intermedio_procresar, comodin);
+                //RecuperarInformacion(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0,5), txtRutaZip.Text);
             }
 
         }
 
-        static bool zip_ya_fue_procesado(string UltimoArchivoProcesado,string ZipProcesar)
+        static void intermedio_procresar(object? obj)
+        {
+            Comodin e = (Comodin)obj;
+
+            RecuperarInformacion(e.rutaDescomprimir, e.conexion, e.cdlocal, e.rutaZip);
+        }
+
+        static bool zip_ya_fue_procesado(string UltimoArchivoProcesado, string ZipProcesar)
         {
             return UltimoArchivoProcesado.Trim().ToUpper().Equals(ZipProcesar.Trim().ToUpper());
-            
+
         }
 
         static string getUltimoArchivoProcesado(string pCdlocal, SqlConnection c)
@@ -245,7 +267,15 @@ namespace PROYECTO_01
 
             if (respuesta.Read())
             {
-                ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                try
+                {
+                    ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                }
+                catch (SqlNullValueException e)
+                {
+                    ultimoArchivoCargado = "";
+                }
+                
                 ultimoArchivoCargado = ultimoArchivoCargado.Trim();
 
                 respuesta.Close();
@@ -254,23 +284,26 @@ namespace PROYECTO_01
             return ultimoArchivoCargado;
         }
 
-        static FileInfo[] getArchivosRecepcionados(string pCdlocal,string pRutaZIP, string UltimoArchivoProcesado)
+        static List<FileInfo> getArchivosRecepcionados(string pCdlocal, string pRutaZIP, string UltimoArchivoProcesado)
         {
             //accediento a la carpeta con los zip
             DirectoryInfo Metadata_de_la_carpeta = new DirectoryInfo(pRutaZIP);
-            FileInfo[] misArchivos = Array.Empty<FileInfo>();
-            
+            List<FileInfo> misArchivos = new List<FileInfo> ();
+                //Array.Empty<FileInfo>();
+
             //recorremos los archivos ordenados por fecha de creación
             foreach (FileInfo Archivo in Metadata_de_la_carpeta.GetFiles().OrderBy(p => p.CreationTime))
             {
+                bool esta_repetido = zip_ya_fue_procesado(UltimoArchivoProcesado.ToUpper(), Archivo.Name.ToUpper());
+                
                 //Si el archivo corresponde a la sucursal y aún no ha sido Procesado, se agrega al arreglo de archivos recepcionados
-                if (Archivo.Name.ToUpper().Contains($"ENVIO_{pCdlocal}") && 
-                    !zip_ya_fue_procesado(UltimoArchivoProcesado.ToUpper(), Archivo.Name.ToUpper())) 
+                if (Archivo.Name.ToUpper().Contains($"ENVIO_{pCdlocal.Trim()}") &&
+                    !esta_repetido)
                 {
-                    misArchivos.Append(Archivo);
-
+                    misArchivos.Add(Archivo);
+                    
                     //Este break es para evitar que siga buscando archivos si ya llegó al último procesado..
-                    if (zip_ya_fue_procesado(UltimoArchivoProcesado.ToUpper(), Archivo.Name.ToUpper()))
+                    if (esta_repetido)
                         break;
                 }
             }
@@ -283,16 +316,16 @@ namespace PROYECTO_01
             return (path.Substring(path.Length - 1, 1) == "\\");
         }
 
-        static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string nombreSP, string pCdlocal, string pRutaZip )
+        static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
         {
             /*Procesar el archivo que nos ha enviado la sucursal.
-             *Buscar todos los zip que ha enviado ese local (pueden ser varios).
-             *
-             */
-            string UltimoProcesado      = getUltimoArchivoProcesado(pCdlocal, cnx);
-            FileInfo[] misArchivosZip   = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
-            FileInfo[] misArchivosXML = Array.Empty<FileInfo>();
- 
+                *Buscar todos los zip que ha enviado ese local (pueden ser varios).
+                *
+                */
+            string UltimoProcesado = getUltimoArchivoProcesado(pCdlocal, cnx);
+            List<FileInfo> misArchivosZip = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
+            List<FileInfo> misArchivosXML = new List<FileInfo>();
+
             if (misArchivosZip == null) //No hay archivos -> terminamos el proceso
                 return;
 
@@ -306,7 +339,7 @@ namespace PROYECTO_01
                 try
                 {
                     if (Directory.Exists(miCarpeta))
-                        Directory.Delete(miCarpeta,true);
+                        Directory.Delete(miCarpeta, true);
                 }
                 catch (Exception ex)
                 {
@@ -369,13 +402,13 @@ namespace PROYECTO_01
                         //    flgOK = procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
                         //    break;
 
-                        
+
 
                         default:
                             flgOK = false;
                             break;
                     }
-                    
+
 
                     if (flgOK)
                     {
@@ -406,16 +439,16 @@ namespace PROYECTO_01
             try
             {
                 consulta.ExecuteNonQuery();
-                foreach(SqlParameter parametro in consulta.Parameters)
+                foreach (SqlParameter parametro in consulta.Parameters)
                 {
-                    if(parametro.Direction == ParameterDirection.Output 
+                    if (parametro.Direction == ParameterDirection.Output
                         && parametro.ParameterName.Equals("SwError")
                         && parametro.Value.ToString().Equals("0"))
                     {
                         isOK = true;
                         break;
                     }
-                        
+
                 }
 
             }
@@ -437,7 +470,7 @@ namespace PROYECTO_01
 
             RutaZip = txtRutaZip.Text;
             RutaDescomprimir = txtRutaDescomprimir.Text;
-            
+
             //Convertir los datos en un Json
             var EntornoZIP = new
             {
@@ -460,7 +493,6 @@ namespace PROYECTO_01
         }
 
         
-
         /*******POOL DE HILOS - EJEMPLO
         ProbandoPoolHilos ProbandoPoolHilosObject = new ProbandoPoolHilos();
         //ProbandoPoolHilosObject.EjecutarProceso();
@@ -482,5 +514,5 @@ namespace PROYECTO_01
             ProbandoPoolHilosObject.EjecutarProceso(nTarea);
         }
         *************/
-                }
-            }
+        }
+    }
