@@ -13,12 +13,14 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Linq;
 using System.Data;
+using System;
 
 namespace PROYECTO_01
 {
     public partial class Form1 : MaterialForm
     {
         SqlConnection cnx = new SqlConnection();
+        List<SqlDataReader> Resultados = new List<SqlDataReader>();
 
         public Form1()
         {
@@ -238,6 +240,7 @@ namespace PROYECTO_01
 
             foreach (var item in this.listSeleccion.Items)
             {
+                //Resultados.Add();
                 //Ejecutar la recepción de la información
                 Comodin comodin = new Comodin(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0, 5), txtRutaZip.Text);
                 ThreadPool.QueueUserWorkItem(intermedio_procresar, comodin);
@@ -261,26 +264,39 @@ namespace PROYECTO_01
 
         static string getUltimoArchivoProcesado(string pCdlocal, SqlConnection c)
         {
-            SqlCommand qry = new SqlCommand($"select max(archivo) as archivo from datalocales where cdlocalOrigen='{pCdlocal}'", c);
-            SqlDataReader respuesta = qry.ExecuteReader();
             string ultimoArchivoCargado = "";
+            bool repetir = false;
+            SqlCommand qry = new SqlCommand($"select max(archivo) as archivo from datalocales where cdlocalOrigen='{pCdlocal}'", c);
 
-            if (respuesta.Read())
+            do
             {
                 try
                 {
-                    ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                    SqlDataReader respuesta = qry.ExecuteReader();
+                    if (respuesta.Read())
+                    {
+                        try
+                        {
+                            ultimoArchivoCargado = (string)respuesta.GetSqlString(0);
+                        }
+                        catch (SqlNullValueException e)
+                        {
+                            ultimoArchivoCargado = "";
+                        }
+
+                        ultimoArchivoCargado = ultimoArchivoCargado.Trim();
+                    }
+
+                    respuesta.Close();
                 }
-                catch (SqlNullValueException e)
+                catch (InvalidOperationException e)
                 {
-                    ultimoArchivoCargado = "";
+                    MessageBox.Show(e.Message);
+                    repetir = true; 
                 }
-                
-                ultimoArchivoCargado = ultimoArchivoCargado.Trim();
-
-                respuesta.Close();
             }
-
+            while (repetir);
+            
             return ultimoArchivoCargado;
         }
 

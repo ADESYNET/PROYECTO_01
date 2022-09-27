@@ -14,12 +14,14 @@ namespace PROYECTO_01
         public SqlConnection conexion;
         public string cdlocal;
         public string rutaZip;
+        
         public Comodin(string rutaDescomprimir, SqlConnection conexion, string cdlocal, string rutaZip)
         {
             this.rutaDescomprimir = rutaDescomprimir;
             this.conexion = conexion;
             this.cdlocal = cdlocal;
             this.rutaZip = rutaZip;
+           
         }
     }
 }
