@@ -116,7 +116,11 @@ namespace PROYECTO_01
 
         public SqlConnection AbrirConexion(string pUser, string pContrasena, string pBaseDatos, string pServidor)
         {
-            string CadenaConexion = $"Persist Security Info=False;User ID={pUser};Password={pContrasena};Initial Catalog={pBaseDatos};Server={pServidor}";
+            /*
+             * es importante agregar MultipleActiveResultSets=True para que se pueda ejecutar los hilos en sql
+             */
+
+            string CadenaConexion = $"Persist Security Info=False;User ID={pUser};Password={pContrasena};Initial Catalog={pBaseDatos};Server={pServidor}; MultipleActiveResultSets=True";
             SqlConnection conexion = new SqlConnection(CadenaConexion);
 
             try
@@ -262,7 +266,7 @@ namespace PROYECTO_01
 
         }
 
-        static string getUltimoArchivoProcesado(string pCdlocal, SqlConnection c)
+        static async Task<string> getUltimoArchivoProcesadoAsync(string pCdlocal, SqlConnection c)
         {
             string ultimoArchivoCargado = "";
             bool repetir = false;
@@ -272,7 +276,7 @@ namespace PROYECTO_01
             {
                 try
                 {
-                    SqlDataReader respuesta = qry.ExecuteReader();
+                    SqlDataReader respuesta = await qry.ExecuteReaderAsync();
                     if (respuesta.Read())
                     {
                         try
@@ -287,7 +291,8 @@ namespace PROYECTO_01
                         ultimoArchivoCargado = ultimoArchivoCargado.Trim();
                     }
 
-                    respuesta.Close();
+                    await respuesta.CloseAsync();
+                    repetir = false;
                 }
                 catch (InvalidOperationException e)
                 {
@@ -332,13 +337,14 @@ namespace PROYECTO_01
             return (path.Substring(path.Length - 1, 1) == "\\");
         }
 
-        static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
+        static async Task RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
+        //static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
         {
             /*Procesar el archivo que nos ha enviado la sucursal.
                 *Buscar todos los zip que ha enviado ese local (pueden ser varios).
                 *
                 */
-            string UltimoProcesado = getUltimoArchivoProcesado(pCdlocal, cnx);
+            string UltimoProcesado = await getUltimoArchivoProcesadoAsync(pCdlocal, cnx);
             List<FileInfo> misArchivosZip = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
             List<FileInfo> misArchivosXML = new List<FileInfo>();
 
@@ -369,8 +375,6 @@ namespace PROYECTO_01
                 //descomprimir el zip
                 try
                 {
-                    //string miZip = ruta_termina_en_back_slash(pRutaZip) ? $"{pRutaZip}{Zip}" : $"{pRutaZip}\\{Zip}";
-                    //ZipFile.ExtractToDirectory(miZip, miCarpeta);
                     ZipFile.ExtractToDirectory(Zip.FullName, miCarpeta);
 
                 }
@@ -381,8 +385,8 @@ namespace PROYECTO_01
                 }
 
                 //con el zip descomprimido.. ahora tenemos todos los xml desparramados (en miCarpeta) listos parar procesarlos en sql.
-                /*
-                foreach(FileInfo xml in misArchivosXML)
+                DirectoryInfo Contenido_carpeta_xml = new DirectoryInfo(miCarpeta);
+                foreach (FileInfo xml in Contenido_carpeta_xml.GetFiles())
                 {
                     //SqlXml miXML = new SqlXml(new XmlTextReader(ruta_termina_en_back_slash(miCarpeta) ? $"{miCarpeta}{xml}" : $"{miCarpeta}\\{xml}"));
                     SqlXml miXML = new SqlXml(new XmlTextReader(xml.FullName));
@@ -391,28 +395,160 @@ namespace PROYECTO_01
                     switch (xml.Name.ToUpper())
                     {
                         case "CLIENTE":
-                            flgOK = procesar_xml("AltaCliente_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaCliente_XML", miXML, cnx);
                             break;
 
                         case "CLIENTE_ESTADO":
-                            flgOK = procesar_xml("AltaCliente_Estado_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaCliente_Estado_XML", miXML, cnx);
                             break;
 
                         case "CREDCLIENTE_BORR":
-                            flgOK = procesar_xml("AltaCredCliente_BorrdelDia_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaCredCliente_BorrdelDia_XML", miXML, cnx);
                             break;
 
                         case "CREDCLIENTE":
-                            flgOK = procesar_xml("AltaCredCliente_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaCredCliente_XML", miXML, cnx);
                             break;
 
                         case "TERMINAL":
-                            flgOK = procesar_xml("AltaTerminal_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaTerminal_XML", miXML, cnx);
                             break;
 
                         case "BANCO_CAJA":
-                            flgOK = procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
+                            flgOK = await procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
                             break;
+                            
+                        case "VENTAD_OFERTAD":
+                            flgOK = await procesar_xml("AltaCabeceraDetalle_VENTAD_OFERTAD_XML", miXML, cnx);
+                            break;
+                            
+                            /*OJO QUE AQUÍ DEPENDE DE LA TABLA VENTA*/
+                        case "VENTADRECARGAV":
+                            flgOK = await procesar_xml("AltaCabeceraDetalle_VENTADRECARGAV_XML", miXML, cnx);
+                            break;
+                            
+                        case "CLIENTE_PUNTOS_BONUS":
+                            flgOK = await procesar_xml("AltaCLIENTE_PUNTOS_BONUS_XML", miXML, cnx);
+                            break;
+                        
+                        case "VENTAD_FORMULAMAGISTRAL":
+                            flgOK = await procesar_xml("AltaVENTAD_FORMULAMAGISTRAL_XML", miXML, cnx);
+                            break;
+
+                        case "DISASHOP_VENTAD":
+                            flgOK = await procesar_xml("AltaDISASHOP_VENTAD_XML", miXML, cnx);
+                            break;
+
+                        case "DISASHOP_CAJAD":
+                            flgOK = await procesar_xml("AltaDISASHOP_CAJAD_XML", miXML, cnx);
+                            break;
+
+                        case "DISASHOP_CONSULTA_BANCARIA":
+                            flgOK = await procesar_xml("AltaDisashop_Consulta_Bancaria_XML", miXML, cnx);
+                            break;
+
+                        case "INCENTIVO_VENTAD":
+                            flgOK = await procesar_xml("Alta_INCENTIVO_VENTAD_XML", miXML, cnx);
+                            break;
+
+                        case "CANALVTA_VENTA_CALL_CENTER":
+                            flgOK = await procesar_xml("Alta_CANALVTA_VENTA_CALL_CENTER_XML", miXML, cnx);
+                            break;
+
+                        case "VENTA_PEDIDO":
+                            flgOK = await procesar_xml("Alta_VENTA_PEDIDO_XML", miXML, cnx);
+                            break;
+
+                        case "CAJA":
+                            flgOK = await procesar_xml("AltaCAJA_XML", miXML, cnx);
+                            break;
+
+                        case "INCENTIVO_NCREDITOD":
+                            flgOK = await procesar_xml("Alta_INCENTIVO_NCREDITOD_XML", miXML, cnx);
+                            break;
+
+                        case "ART_STK":
+                            flgOK = await procesar_xml("AltaART_STK_XML", miXML, cnx);
+                            break;
+
+                        case "DEPOSITO_VENTA":
+                            flgOK = await procesar_xml("AltaDEPOSITO_VENTA_XML", miXML, cnx);
+                            break;
+
+                        case "VENTAD_NC":
+                            flgOK = await procesar_xml("AltaVENTAD_NC_XML", miXML, cnx);
+                            break;
+
+                        case "ART_VENC":
+                            flgOK = await procesar_xml("AltaART_VENC_XML", miXML, cnx);
+                            break;
+
+                        case "SALIDA_HASHCPE":
+                            flgOK = await procesar_xml("AltaLOCAL_SALIDA_HASHCPE_XML", miXML, cnx);
+                            break;
+
+                        case "ARTICULO_FALTANTE":
+                            flgOK = await procesar_xml("Alta_Articulo_Faltante_XML", miXML, cnx);
+                            break;
+
+                        case "VENTAD_ART_PREC_TEMPORALD":
+                            flgOK = await procesar_xml("Alta_VENTAD_ART_PREC_TEMPORALD_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESO":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESO_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOD":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOD_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOD_FVLT":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOD_FVLT_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOB":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOB_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOD_UBICACION":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOD_UBICACION_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOD_ORGANOLEPTICO":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOD_ORGANOLEPTICO_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESOD_BPA_ARTICULO_FORMATO":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESOD_BPA_ARTICULO_FORMATO_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_PREINGRESO_RECHAZO":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_PREINGRESO_RECHAZO_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_GUIAINTERNADEVPROVEEDOR":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_GUIAINTERNADEVPROVEEDOR_XML", miXML, cnx);
+                            break;
+
+                        case "OC_DISTRIBUIDA_TMP_GUIAINTERNADEVPROVEEDORD":
+                            flgOK = await procesar_xml("Alta_OC_DISTRIBUIDA_TMP_GUIAINTERNADEVPROVEEDORD_XML", miXML, cnx);
+                            break;
+
+                        case "VENTA_SISTEMA_PAGO_OBLIGACIONES_TRIBUTARIAS":
+                            flgOK = await procesar_xml("Alta_VENTA_SISTEMA_PAGO_OBLIGACIONES_TRIBUTARIAS", miXML, cnx);
+                            break;
+
+                        case "VENTAD_OTROS":
+                            flgOK = await procesar_xml("Alta_VENTAD_OTROS", miXML, cnx);
+                            break;
+
+                        
+
+
+
+
+                        
 
                         //case "INGRESO":
                         //    flgOK = procesar_xml("AltaBANCO_CAJA_XML", miXML, cnx);
@@ -436,17 +572,17 @@ namespace PROYECTO_01
                         break; //Sale del foreach
                     }
 
-                }*/
+                }
             }
         }
 
-        private static bool procesar_xml(string SP, SqlXml miXML, SqlConnection cnx)
+        private static async Task<bool> procesar_xml(string SP, SqlXml miXML, SqlConnection cnx)
         {
             string qry = $"exec {SP} @xmlParameter";
 
             SqlCommand consulta = new SqlCommand(qry, cnx);
 
-            consulta.Parameters.AddWithValue("@xmlParameter", miXML);
+            consulta.Parameters.AddWithValue("@xmlParameter", miXML.Value);
             consulta.Parameters.Add("Mensaje", SqlDbType.VarChar, 300).Direction = ParameterDirection.Output;
             consulta.Parameters.Add("SwError", SqlDbType.Bit, 1).Direction = ParameterDirection.Output;
 
@@ -454,7 +590,7 @@ namespace PROYECTO_01
 
             try
             {
-                consulta.ExecuteNonQuery();
+                await consulta.ExecuteNonQueryAsync();
                 foreach (SqlParameter parametro in consulta.Parameters)
                 {
                     if (parametro.Direction == ParameterDirection.Output
@@ -463,6 +599,10 @@ namespace PROYECTO_01
                     {
                         isOK = true;
                         break;
+                    }
+                    else
+                    {
+                        isOK = false;
                     }
 
                 }
@@ -508,7 +648,23 @@ namespace PROYECTO_01
             }
         }
 
-        
+        private void button1_Click(object sender, EventArgs e)
+        {
+            //recorrer las sucursales
+            if (this.listSeleccion.Items.Count == 0)
+                return;
+
+            foreach (var item in this.listSeleccion.Items)
+            {
+                //Resultados.Add();
+                //Ejecutar la recepción de la información
+                Comodin comodin = new Comodin(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0, 5), txtRutaZip.Text);
+                ThreadPool.QueueUserWorkItem(intermedio_procresar, comodin);
+                //RecuperarInformacion(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0,5), txtRutaZip.Text);
+            }
+        }
+
+
         /*******POOL DE HILOS - EJEMPLO
         ProbandoPoolHilos ProbandoPoolHilosObject = new ProbandoPoolHilos();
         //ProbandoPoolHilosObject.EjecutarProceso();
@@ -530,5 +686,5 @@ namespace PROYECTO_01
             ProbandoPoolHilosObject.EjecutarProceso(nTarea);
         }
         *************/
-        }
+    }
     }

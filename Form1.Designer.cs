@@ -30,6 +30,7 @@
         {
             this.tabPrincipal = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.button1 = new System.Windows.Forms.Button();
             this.btnProcesar = new System.Windows.Forms.Button();
             this.btnIzquierdaTodo = new System.Windows.Forms.Button();
             this.btnIzquierda = new System.Windows.Forms.Button();
@@ -76,6 +77,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.button1);
             this.tabPage1.Controls.Add(this.btnProcesar);
             this.tabPage1.Controls.Add(this.btnIzquierdaTodo);
             this.tabPage1.Controls.Add(this.btnIzquierda);
@@ -91,6 +93,16 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Sucursales";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(249, 226);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 43);
+            this.button1.TabIndex = 8;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // btnProcesar
             // 
@@ -161,7 +173,6 @@
             this.listSucursales.Size = new System.Drawing.Size(186, 199);
             this.listSucursales.TabIndex = 1;
             this.listSucursales.DoubleClick += new System.EventHandler(this.btnDerecha_Click);
-                
             // 
             // label1
             // 
@@ -370,5 +381,6 @@
         private TextBox txtRutaDescomprimir;
         private Label lblRutaDescomprimir;
         private Button btnRutasZip;
+        private Button button1;
     }
 }
