@@ -14,6 +14,7 @@ using System.Xml;
 using System.Linq;
 using System.Data;
 using System;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace PROYECTO_01
 {
@@ -21,6 +22,7 @@ namespace PROYECTO_01
     {
         SqlConnection cnx = new SqlConnection();
         List<SqlDataReader> Resultados = new List<SqlDataReader>();
+        private static List<logProceso> TrazaProceso = new List<logProceso>();
 
         public Form1()
         {
@@ -286,6 +288,7 @@ namespace PROYECTO_01
                         catch (SqlNullValueException e)
                         {
                             ultimoArchivoCargado = "";
+                            TrazaProceso.Add(new logProceso(pCdlocal, "", "", $"Consultando último archivo procesado.\n Sucursal {pCdlocal}.\n El proceso no se detiene. \n{e.Message} "));
                         }
 
                         ultimoArchivoCargado = ultimoArchivoCargado.Trim();
@@ -344,6 +347,8 @@ namespace PROYECTO_01
                 *Buscar todos los zip que ha enviado ese local (pueden ser varios).
                 *
                 */
+            TrazaProceso.Add(new logProceso(pCdlocal, "", "", $"Iniciando proceso para el local {pCdlocal}"));
+
             string UltimoProcesado = await getUltimoArchivoProcesadoAsync(pCdlocal, cnx);
             List<FileInfo> misArchivosZip = getArchivosRecepcionados(pCdlocal, pRutaZip, UltimoProcesado);
             List<FileInfo> misArchivosXML = new List<FileInfo>();
@@ -392,7 +397,9 @@ namespace PROYECTO_01
                     SqlXml miXML = new SqlXml(new XmlTextReader(xml.FullName));
                     bool flgOK = false;
 
-                    switch (xml.Name.ToUpper())
+                    string aux = xml.Name.Contains(xml.Extension) ? xml.Name.Substring(0, xml.Name.Length - xml.Extension.Length) : xml.Name;
+                    
+                    switch (aux)
                     {
                         case "CLIENTE":
                             flgOK = await procesar_xml("AltaCliente_XML", miXML, cnx);
@@ -467,10 +474,10 @@ namespace PROYECTO_01
                             flgOK = await procesar_xml("Alta_INCENTIVO_NCREDITOD_XML", miXML, cnx);
                             break;
 
-                        case "ART_STK":
+                        /*case "ART_STK":
                             flgOK = await procesar_xml("AltaART_STK_XML", miXML, cnx);
                             break;
-
+                        */
                         case "DEPOSITO_VENTA":
                             flgOK = await procesar_xml("AltaDEPOSITO_VENTA_XML", miXML, cnx);
                             break;
@@ -576,16 +583,48 @@ namespace PROYECTO_01
             }
         }
 
+        /*public async Task<string?> EjecutaSP(string? )
+        {
+            using (var command = _context.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = "dbo.TestNull";
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.Add(new SqlParameter("@keyword", keyword == null ? DBNull.Value : keyword));
+
+                _context.Database.OpenConnection();
+                string? result = (string?)await command.ExecuteScalarAsync();
+                _context.Database.OpenConnection();
+
+                return result;
+            }
+        }*/
+
         private static async Task<bool> procesar_xml(string SP, SqlXml miXML, SqlConnection cnx)
         {
-            string qry = $"exec {SP} @xmlParameter";
+            /*SqlCommand consulta = new SqlCommand();
+            consulta.CommandType = CommandType.StoredProcedure;
+            consulta.CommandText = SP;
+            consulta.Connection = cnx;
+            consulta.Parameters.Add(new SqlParameter("@XMLDatos",miXML.Value));
+            */
+            //SqlParameter[] param = new SqlParameter[1];
+            //param[0] = new SqlParameter("@estado", SqlDbType.Text);
+            //param[0].Value = miXML.Value;
+            //DataSet ds = new DataSet();
+            //SqlDataAdapter da = new SqlDataAdapter(cmd);
 
-            SqlCommand consulta = new SqlCommand(qry, cnx);
+            //da.Fill(ds);
 
-            consulta.Parameters.AddWithValue("@xmlParameter", miXML.Value);
+            //string qry = $"exec {SP} @xmlParameter";
+
+            SqlCommand consulta = new SqlCommand();
+            consulta.CommandType = CommandType.StoredProcedure;
+            consulta.CommandText = SP;
+            consulta.Connection = cnx;
+            consulta.Parameters.AddWithValue("@XMLDatos", miXML.Value);
             consulta.Parameters.Add("Mensaje", SqlDbType.VarChar, 300).Direction = ParameterDirection.Output;
             consulta.Parameters.Add("SwError", SqlDbType.Bit, 1).Direction = ParameterDirection.Output;
-
+           
             bool isOK = false;
 
             try
@@ -593,6 +632,12 @@ namespace PROYECTO_01
                 await consulta.ExecuteNonQueryAsync();
                 foreach (SqlParameter parametro in consulta.Parameters)
                 {
+                    if (parametro.ParameterName.Equals("Mensaje"))
+                    {
+                        MessageBox.Show($"{SP} \n {parametro.Value.ToString()}");
+                        //await Cotinuar($"{SP} \n {parametro.Value.ToString()}");
+                    }
+
                     if (parametro.Direction == ParameterDirection.Output
                         && parametro.ParameterName.Equals("SwError")
                         && parametro.Value.ToString().Equals("0"))
@@ -613,8 +658,9 @@ namespace PROYECTO_01
                 MessageBox.Show(ex.Message);
                 return false;
             }
-
+            
             return isOK;
+            
 
         }
 
