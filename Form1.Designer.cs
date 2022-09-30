@@ -30,7 +30,6 @@
         {
             this.tabPrincipal = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.button1 = new System.Windows.Forms.Button();
             this.btnProcesar = new System.Windows.Forms.Button();
             this.btnIzquierdaTodo = new System.Windows.Forms.Button();
             this.btnIzquierda = new System.Windows.Forms.Button();
@@ -55,6 +54,7 @@
             this.lblContrasena = new System.Windows.Forms.Label();
             this.lblUsuario = new System.Windows.Forms.Label();
             this.lblServidor = new System.Windows.Forms.Label();
+            this.txtMensajes = new MaterialSkin.Controls.MaterialMultiLineTextBox();
             this.tabPrincipal.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -72,12 +72,12 @@
             this.tabPrincipal.Location = new System.Drawing.Point(12, 67);
             this.tabPrincipal.Name = "tabPrincipal";
             this.tabPrincipal.SelectedIndex = 0;
-            this.tabPrincipal.Size = new System.Drawing.Size(481, 315);
+            this.tabPrincipal.Size = new System.Drawing.Size(481, 458);
             this.tabPrincipal.TabIndex = 0;
             // 
             // tabPage1
             // 
-            this.tabPage1.Controls.Add(this.button1);
+            this.tabPage1.Controls.Add(this.txtMensajes);
             this.tabPage1.Controls.Add(this.btnProcesar);
             this.tabPage1.Controls.Add(this.btnIzquierdaTodo);
             this.tabPage1.Controls.Add(this.btnIzquierda);
@@ -89,24 +89,14 @@
             this.tabPage1.Location = new System.Drawing.Point(4, 24);
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(473, 287);
+            this.tabPage1.Size = new System.Drawing.Size(473, 430);
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "Sucursales";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // button1
-            // 
-            this.button1.Location = new System.Drawing.Point(249, 226);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 43);
-            this.button1.TabIndex = 8;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // btnProcesar
             // 
-            this.btnProcesar.Location = new System.Drawing.Point(330, 226);
+            this.btnProcesar.Location = new System.Drawing.Point(195, 209);
             this.btnProcesar.Name = "btnProcesar";
             this.btnProcesar.Size = new System.Drawing.Size(75, 43);
             this.btnProcesar.TabIndex = 7;
@@ -192,7 +182,7 @@
             this.tabPage2.Location = new System.Drawing.Point(4, 24);
             this.tabPage2.Name = "tabPage2";
             this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(473, 287);
+            this.tabPage2.Size = new System.Drawing.Size(473, 430);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "ZIP";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -252,7 +242,7 @@
             this.tabPage3.Controls.Add(this.lblServidor);
             this.tabPage3.Location = new System.Drawing.Point(4, 24);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(473, 287);
+            this.tabPage3.Size = new System.Drawing.Size(473, 430);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Conexión";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -333,11 +323,25 @@
             this.lblServidor.Text = "Servidor";
             this.lblServidor.Click += new System.EventHandler(this.label1_Click);
             // 
+            // txtMensajes
+            // 
+            this.txtMensajes.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.txtMensajes.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtMensajes.Depth = 0;
+            this.txtMensajes.Font = new System.Drawing.Font("Roboto", 14F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Pixel);
+            this.txtMensajes.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(222)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.txtMensajes.Location = new System.Drawing.Point(6, 258);
+            this.txtMensajes.MouseState = MaterialSkin.MouseState.HOVER;
+            this.txtMensajes.Name = "txtMensajes";
+            this.txtMensajes.Size = new System.Drawing.Size(461, 166);
+            this.txtMensajes.TabIndex = 8;
+            this.txtMensajes.Text = "";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(505, 394);
+            this.ClientSize = new System.Drawing.Size(505, 537);
             this.Controls.Add(this.tabPrincipal);
             this.Name = "Form1";
             this.Text = "Recepción Información de Sucursales";
@@ -381,6 +385,6 @@
         private TextBox txtRutaDescomprimir;
         private Label lblRutaDescomprimir;
         private Button btnRutasZip;
-        private Button button1;
+        private MaterialSkin.Controls.MaterialMultiLineTextBox txtMensajes;
     }
 }

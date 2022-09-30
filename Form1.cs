@@ -92,7 +92,7 @@ namespace PROYECTO_01
                 this.txtContrasena.Text = jsonDatosConexion.Contrasena;
                 this.txtServidor.Text = jsonDatosConexion.Servidor;
                 this.txtUsuario.Text = jsonDatosConexion.Usuario;
-
+                
                 cnx = AbrirConexion(this.txtUsuario.Text, this.txtContrasena.Text, this.txtBaseDatos.Text, this.txtServidor.Text);
                 if (cnx.State == 0)
                 {
@@ -243,7 +243,7 @@ namespace PROYECTO_01
             //recorrer las sucursales
             if (this.listSeleccion.Items.Count == 0)
                 return;
-
+            
             foreach (var item in this.listSeleccion.Items)
             {
                 //Resultados.Add();
@@ -340,7 +340,7 @@ namespace PROYECTO_01
             return (path.Substring(path.Length - 1, 1) == "\\");
         }
 
-        static async Task RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
+        private static async Task RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
         //static void RecuperarInformacion(string pRutaDescoprimir, SqlConnection cnx, string pCdlocal, string pRutaZip)
         {
             /*Procesar el archivo que nos ha enviado la sucursal.
@@ -393,7 +393,6 @@ namespace PROYECTO_01
                 DirectoryInfo Contenido_carpeta_xml = new DirectoryInfo(miCarpeta);
                 foreach (FileInfo xml in Contenido_carpeta_xml.GetFiles())
                 {
-                    //SqlXml miXML = new SqlXml(new XmlTextReader(ruta_termina_en_back_slash(miCarpeta) ? $"{miCarpeta}{xml}" : $"{miCarpeta}\\{xml}"));
                     SqlXml miXML = new SqlXml(new XmlTextReader(xml.FullName));
                     bool flgOK = false;
 
@@ -474,10 +473,10 @@ namespace PROYECTO_01
                             flgOK = await procesar_xml("Alta_INCENTIVO_NCREDITOD_XML", miXML, cnx);
                             break;
 
-                        /*case "ART_STK":
+                        case "ART_STK":
                             flgOK = await procesar_xml("AltaART_STK_XML", miXML, cnx);
                             break;
-                        */
+                        
                         case "DEPOSITO_VENTA":
                             flgOK = await procesar_xml("AltaDEPOSITO_VENTA_XML", miXML, cnx);
                             break;
@@ -571,33 +570,16 @@ namespace PROYECTO_01
 
                     if (flgOK)
                     {
-                        MessageBox.Show("ok");
+                        
                     }
                     else
                     {
-                        MessageBox.Show("error");
                         break; //Sale del foreach
                     }
 
                 }
             }
         }
-
-        /*public async Task<string?> EjecutaSP(string? )
-        {
-            using (var command = _context.Database.GetDbConnection().CreateCommand())
-            {
-                command.CommandText = "dbo.TestNull";
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-                command.Parameters.Add(new SqlParameter("@keyword", keyword == null ? DBNull.Value : keyword));
-
-                _context.Database.OpenConnection();
-                string? result = (string?)await command.ExecuteScalarAsync();
-                _context.Database.OpenConnection();
-
-                return result;
-            }
-        }*/
 
         private static async Task<bool> procesar_xml(string SP, SqlXml miXML, SqlConnection cnx)
         {
@@ -615,12 +597,12 @@ namespace PROYECTO_01
 
             //da.Fill(ds);
 
-            //string qry = $"exec {SP} @xmlParameter";
+            string qry = $"exec {SP} @XMLDatos";
 
-            SqlCommand consulta = new SqlCommand();
-            consulta.CommandType = CommandType.StoredProcedure;
-            consulta.CommandText = SP;
-            consulta.Connection = cnx;
+            SqlCommand consulta = new SqlCommand(qry,cnx);
+            //consulta.CommandType = CommandType.StoredProcedure;
+            //consulta.CommandText = SP;
+            //consulta.Connection = cnx;
             consulta.Parameters.AddWithValue("@XMLDatos", miXML.Value);
             consulta.Parameters.Add("Mensaje", SqlDbType.VarChar, 300).Direction = ParameterDirection.Output;
             consulta.Parameters.Add("SwError", SqlDbType.Bit, 1).Direction = ParameterDirection.Output;
@@ -694,23 +676,7 @@ namespace PROYECTO_01
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //recorrer las sucursales
-            if (this.listSeleccion.Items.Count == 0)
-                return;
-
-            foreach (var item in this.listSeleccion.Items)
-            {
-                //Resultados.Add();
-                //Ejecutar la recepción de la información
-                Comodin comodin = new Comodin(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0, 5), txtRutaZip.Text);
-                ThreadPool.QueueUserWorkItem(intermedio_procresar, comodin);
-                //RecuperarInformacion(txtRutaDescomprimir.Text, cnx, item.ToString().Substring(0,5), txtRutaZip.Text);
-            }
-        }
-
-
+        
         /*******POOL DE HILOS - EJEMPLO
         ProbandoPoolHilos ProbandoPoolHilosObject = new ProbandoPoolHilos();
         //ProbandoPoolHilosObject.EjecutarProceso();
